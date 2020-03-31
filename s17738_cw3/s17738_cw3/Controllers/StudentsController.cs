@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using s17738_cw3.DAL;
 using s17738_cw3.Models;
 
 namespace s17738_cw3.Controllers
@@ -9,45 +11,53 @@ namespace s17738_cw3.Controllers
     public class StudentsController : ControllerBase
     {
 
-        [HttpGet]
-        public IActionResult GetStudents(string orderBy)
+        private readonly IDbService _dbService;
+
+        public StudentsController(IDbService dbService)
         {
-            return Ok($"Nowak, Kowalski, Piotrowicz sortowanie={orderBy}");
+            _dbService = dbService;
+        }
+
+        [HttpGet]
+        public IActionResult GetStudents([FromQuery] string orderBy)
+        {
+            if (orderBy == "lastName")
+            {
+                return Ok(_dbService.GetStudents().OrderBy(s => s.LastName));
+            }
+            return Ok(_dbService.GetStudents());
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public IActionResult Get([FromRoute] int id)
         {
-            if (id == 1)
+            var student = _dbService.GetStudents().SingleOrDefault(s => s.IdStudent == id);
+
+            if (student == null)
             {
-                return Ok("Nowak");
+                return NotFound("Student not found");
             }
-            if (id == 2)
+            else
             {
-                return Ok("Kowalski");
+                return Ok(student);
             }
-            if (id == 3)
-            {
-                return Ok("Piotrowicz");
-            }
-            return NotFound("Student not found");
         }
 
         [HttpPost]
-        public IActionResult CreateStudent(Student student)
+        public IActionResult CreateStudent([FromBody] Student student)
         {
             student.IndexNumber = $"s{ new Random().Next(1, 30000)}";
             return Ok(student);
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateStudent(int id, Student student)
+        public IActionResult UpdateStudent([FromRoute] int id, [FromBody] Student student)
         {
             return Ok($"Student {id} has been updated to {student.FirstName} {student.LastName}");
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteStudent(int id)
+        public IActionResult DeleteStudent([FromRoute] int id)
         {
             return Ok($"Student {id} has been deleted");
         }
