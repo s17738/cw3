@@ -9,9 +9,9 @@ namespace s17738_cw3.Controllers
     {
 
         [HttpGet]
-        public IActionResult GetStudents()
+        public IActionResult GetStudents(string orderBy)
         {
-            return Ok("Nowak, Kowalski, Piotrowicz");
+            return Ok($"Nowak, Kowalski, Piotrowicz sortowanie={orderBy}");
         }
 
         [HttpGet("{id}")]
