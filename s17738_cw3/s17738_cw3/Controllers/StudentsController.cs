@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
+using s17738_cw3.Models;
 
 namespace s17738_cw3.Controllers
 {
@@ -17,7 +18,7 @@ namespace s17738_cw3.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            if(id == 1)
+            if (id == 1)
             {
                 return Ok("Nowak");
             }
@@ -30,6 +31,13 @@ namespace s17738_cw3.Controllers
                 return Ok("Piotrowicz");
             }
             return NotFound("Student not found");
+        }
+
+        [HttpPost]
+        public IActionResult CreateStudent(Student student)
+        {
+            student.IndexNumber = $"s{ new Random().Next(1, 10000)}";
+            return Ok(student);
         }
 
     }
