@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using s17738_cw3.DAL;
@@ -10,7 +12,7 @@ namespace s17738_cw3.Controllers
     [Route("api/students")]
     public class StudentsController : ControllerBase
     {
-
+        private const string ConnectionString = "Server=127.0.0.1;Database=s17738;User Id=sa;Password=my_secret_password;";
         private readonly IDbService _dbService;
 
         public StudentsController(IDbService dbService)
@@ -21,11 +23,32 @@ namespace s17738_cw3.Controllers
         [HttpGet]
         public IActionResult GetStudents([FromQuery] string orderBy)
         {
-            if (orderBy == "lastName")
+            var list = new List<Student>();
+            using (SqlConnection sqlConnection = new SqlConnection(ConnectionString))
+            using (SqlCommand sqlCommand = new SqlCommand())
             {
-                return Ok(_dbService.GetStudents().OrderBy(s => s.LastName));
+                sqlCommand.Connection = sqlConnection;
+                sqlCommand.CommandText = "select * from Student";
+
+                sqlConnection.Open();
+                SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
+                while (sqlDataReader.Read())
+                {
+                    list.Add(new Student
+                    {
+                        FirstName = sqlDataReader["FirstName"].ToString(),
+                        LastName = sqlDataReader["LastName"].ToString(),
+                        IndexNumber = sqlDataReader["IndexNumber"].ToString()
+                    });
+                }
             }
-            return Ok(_dbService.GetStudents());
+
+
+            //if (orderBy == "lastName")
+            //{
+            //    return Ok(_dbService.GetStudents().OrderBy(s => s.LastName));
+            //}
+            return Ok(list);
         }
 
         [HttpGet("{id}")]
