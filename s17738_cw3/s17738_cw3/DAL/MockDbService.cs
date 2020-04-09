@@ -11,9 +11,9 @@ namespace s17738_cw3.DAL
         {
             _students = new List<Student>
             {
-                new Student{ IdStudent=1, FirstName="Jan", LastName="Nowak", IndexNumber="s6251" },
-                new Student{ IdStudent=2, FirstName="Adam", LastName="Kowalski", IndexNumber="s2735" },
-                new Student{ IdStudent=3, FirstName="Ivan", LastName="Piotrowicz", IndexNumber="s15243" }
+                new Student{ FirstName="Jan", LastName="Nowak", IndexNumber="s6251" },
+                new Student{ FirstName="Adam", LastName="Kowalski", IndexNumber="s2735" },
+                new Student{ FirstName="Ivan", LastName="Piotrowicz", IndexNumber="s15243" }
             };
         }
 

@@ -51,19 +51,28 @@ namespace s17738_cw3.Controllers
             return Ok(list);
         }
 
-        [HttpGet("{id}")]
-        public IActionResult Get([FromRoute] int id)
+        [HttpGet("{indexNumber}")]
+        public IActionResult Get([FromRoute] string indexNumber)
         {
-            var student = _dbService.GetStudents().SingleOrDefault(s => s.IdStudent == id);
+            using (SqlConnection sqlConnection = new SqlConnection(ConnectionString))
+            using (SqlCommand sqlCommand = new SqlCommand())
+            {
+                sqlCommand.Connection = sqlConnection;
+                sqlCommand.CommandText = "select * from Student where IndexNumber = '" + indexNumber + "'";
 
-            if (student == null)
-            {
-                return NotFound("Student not found");
+                sqlConnection.Open();
+                SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
+                if (sqlDataReader.Read())
+                {
+                    return Ok(new Student
+                    {
+                        FirstName = sqlDataReader["FirstName"].ToString(),
+                        LastName = sqlDataReader["LastName"].ToString(),
+                        IndexNumber = sqlDataReader["IndexNumber"].ToString()
+                    });
+                }
             }
-            else
-            {
-                return Ok(student);
-            }
+            return NotFound();
         }
 
         [HttpPost]
