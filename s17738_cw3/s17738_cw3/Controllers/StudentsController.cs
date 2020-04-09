@@ -58,7 +58,8 @@ namespace s17738_cw3.Controllers
             using (SqlCommand sqlCommand = new SqlCommand())
             {
                 sqlCommand.Connection = sqlConnection;
-                sqlCommand.CommandText = "select * from Student where IndexNumber = '" + indexNumber + "'";
+                sqlCommand.CommandText = "select * from Student where IndexNumber = @indexNumber";
+                sqlCommand.Parameters.AddWithValue("indexNumber", indexNumber);
 
                 sqlConnection.Open();
                 SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
