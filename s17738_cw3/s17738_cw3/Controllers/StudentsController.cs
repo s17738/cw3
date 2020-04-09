@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using s17738_cw3.DAL;
 using s17738_cw3.Models;
@@ -12,7 +9,6 @@ namespace s17738_cw3.Controllers
     [Route("api/students")]
     public class StudentsController : ControllerBase
     {
-        private const string ConnectionString = "Server=127.0.0.1;Database=s17738;User Id=sa;Password=my_secret_password;";
         private readonly IDbService _dbService;
 
         public StudentsController(IDbService dbService)
@@ -21,59 +17,26 @@ namespace s17738_cw3.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetStudents([FromQuery] string orderBy)
+        public IActionResult GetStudents()
         {
-            var list = new List<Student>();
-            using (SqlConnection sqlConnection = new SqlConnection(ConnectionString))
-            using (SqlCommand sqlCommand = new SqlCommand())
-            {
-                sqlCommand.Connection = sqlConnection;
-                sqlCommand.CommandText = "select * from Student";
-
-                sqlConnection.Open();
-                SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
-                while (sqlDataReader.Read())
-                {
-                    list.Add(new Student
-                    {
-                        FirstName = sqlDataReader["FirstName"].ToString(),
-                        LastName = sqlDataReader["LastName"].ToString(),
-                        IndexNumber = sqlDataReader["IndexNumber"].ToString()
-                    });
-                }
-            }
-
-
-            //if (orderBy == "lastName")
-            //{
-            //    return Ok(_dbService.GetStudents().OrderBy(s => s.LastName));
-            //}
-            return Ok(list);
+            return Ok(_dbService.GetStudents());
         }
 
         [HttpGet("{indexNumber}")]
         public IActionResult Get([FromRoute] string indexNumber)
         {
-            using (SqlConnection sqlConnection = new SqlConnection(ConnectionString))
-            using (SqlCommand sqlCommand = new SqlCommand())
+            Student student = _dbService.GetStudent(indexNumber);
+            if (student != null)
             {
-                sqlCommand.Connection = sqlConnection;
-                sqlCommand.CommandText = "select * from Student where IndexNumber = @indexNumber";
-                sqlCommand.Parameters.AddWithValue("indexNumber", indexNumber);
-
-                sqlConnection.Open();
-                SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
-                if (sqlDataReader.Read())
-                {
-                    return Ok(new Student
-                    {
-                        FirstName = sqlDataReader["FirstName"].ToString(),
-                        LastName = sqlDataReader["LastName"].ToString(),
-                        IndexNumber = sqlDataReader["IndexNumber"].ToString()
-                    });
-                }
+                return Ok(student);
             }
             return NotFound();
+        }
+
+        [HttpGet("{indexNumber}/enrollments")]
+        public IActionResult GetEnrollments([FromRoute] string indexNumber)
+        {
+            return Ok(_dbService.GetStudentEnrollments(indexNumber));
         }
 
         [HttpPost]
