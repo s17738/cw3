@@ -1,14 +1,17 @@
 ﻿using System.Collections.Generic;
+using s17738_cw3.DTO;
 using s17738_cw3.Models;
 
 namespace s17738_cw3.DAL
 {
     public interface IDbService
     {
-        public IEnumerable<Student> GetStudents();
+        IEnumerable<Student> GetStudents();
 
-        public Student GetStudent(string indexNumber);
+        Student GetStudent(string indexNumber);
 
-        public IEnumerable<Enrollment> GetStudentEnrollments(string indexNumber);
+        IEnumerable<Enrollment> GetStudentEnrollments(string indexNumber);
+
+        Enrollment EnrollStudent(EnrollStudentRequest enrollStudentRequest);
     }
 }

@@ -1,10 +1,14 @@
 ﻿
+using System;
+
 namespace s17738_cw3.Models
 {
     public class Enrollment
     {
-        public string Semester { get; set; }
+        public int IdEnrollment { get; set; }
 
-        public string StartDate { get; set; }
+        public int Semester { get; set; }
+
+        public DateTime StartDate { get; set; }
     }
 }

@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using s17738_cw3.DTO;
 using s17738_cw3.Models;
 
 namespace s17738_cw3.DAL
@@ -72,12 +74,101 @@ namespace s17738_cw3.DAL
                 {
                     list.Add(new Enrollment
                     {
-                        Semester = sqlDataReader["Semester"].ToString(),
-                        StartDate = sqlDataReader["StartDate"].ToString()
+                        IdEnrollment = (int)sqlDataReader["IdEnrollment"],
+                        Semester = (int)sqlDataReader["Semester"],
+                        StartDate = DateTime.Parse(sqlDataReader["StartDate"].ToString())
                     });
                 }
             }
             return list;
+        }
+
+        public Enrollment EnrollStudent(EnrollStudentRequest enrollStudentRequest)
+        {
+            Enrollment enrollment = new Enrollment
+            {
+                Semester = 1,
+                StartDate = DateTime.Now
+            };
+
+            using (var connection = new SqlConnection(ConnectionString))
+            using (var command = new SqlCommand())
+            {
+                command.Connection = connection;
+                connection.Open();
+                SqlTransaction transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                try
+                {
+                    command.CommandText = "select IdStudy from Studies where Name=@Name";
+                    command.Parameters.AddWithValue("Name", enrollStudentRequest.Studies);
+
+                    SqlDataReader reader = command.ExecuteReader();
+                    if (!reader.Read())
+                    {
+                        transaction.Rollback();
+                        return null;
+                    }
+                    int IdStudy = (int)reader["IdStudy"];
+                    reader.Close();
+                    command.Parameters.Clear();
+
+                    command.CommandText = "select top 1 IdEnrollment, Semester, IdStudy, StartDate from Enrollment where IdStudy = @IdStudy and Semester = 1 order by StartDate";
+                    command.Parameters.AddWithValue("IdStudy", IdStudy);
+                    reader = command.ExecuteReader();
+                    if (reader.Read())
+                    {
+                        enrollment.IdEnrollment = (int)reader["IdEnrollment"];
+                    }
+                    reader.Close();
+                    command.Parameters.Clear();
+
+
+                    if (enrollment.IdEnrollment == 0)
+                    {
+                        //zapis na studia nie istnieje
+                        //generate IdEnrollment
+                        command.CommandText = "SELECT top 1 IdEnrollment + 1 as IdEnrollment from Enrollment order by IdEnrollment desc";
+                        reader = command.ExecuteReader();
+                        if (!reader.Read())
+                        {
+                            transaction.Rollback();
+                            return null;
+                        }
+                        enrollment.IdEnrollment = (int)reader["IdEnrollment"];
+                        reader.Close();
+                        command.Parameters.Clear();
+
+                        command.CommandText = "insert into Enrollment (IdEnrollment, Semester, IdStudy, StartDate) values (@IdEnrollment, @Semester, @IdStudy, @StartDate)";
+                        command.Parameters.AddWithValue("IdEnrollment", enrollment.IdEnrollment);
+                        command.Parameters.AddWithValue("Semester", 1);
+                        command.Parameters.AddWithValue("IdStudy", IdStudy);
+                        command.Parameters.AddWithValue("StartDate", enrollment.StartDate);
+                        command.ExecuteNonQuery();
+                        command.Parameters.Clear();
+                    }
+
+
+                    //add new student
+                    command.CommandText = "insert into Student (IndexNumber, FirstName, LastName, BirthDate, IdEnrollment) values (@IndexNumber, @FirstName, @LastName, @BirthDate, @IdEnrollment)";
+                    command.Parameters.AddWithValue("IndexNumber", enrollStudentRequest.IndexNumber);
+                    command.Parameters.AddWithValue("FirstName", enrollStudentRequest.FirstName);
+                    command.Parameters.AddWithValue("LastName", enrollStudentRequest.LastName);
+                    command.Parameters.AddWithValue("BirthDate", enrollStudentRequest.Birthdate);
+                    command.Parameters.AddWithValue("IdEnrollment", enrollment.IdEnrollment);
+                    command.ExecuteNonQuery();
+                    command.Parameters.Clear();
+
+                    transaction.Commit();
+                }
+                catch (SqlException exc)
+                {
+                    transaction.Rollback();
+                    throw exc;
+                }
+            }
+            return enrollment;
         }
     }
 }
