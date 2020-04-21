@@ -12,6 +12,10 @@ namespace s17738_cw3.DAL
 
         IEnumerable<Enrollment> GetStudentEnrollments(string indexNumber);
 
+        bool EnrollmentExist(int semester, string studies);
+
         Enrollment EnrollStudent(EnrollStudentRequest enrollStudentRequest);
+
+        Enrollment PromoteStudents(int semester, string studies);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using s17738_cw3.DTO;
 using s17738_cw3.Models;
@@ -81,6 +82,22 @@ namespace s17738_cw3.DAL
                 }
             }
             return list;
+        }
+
+        public bool EnrollmentExist(int semester, string studies)
+        {
+            using (SqlConnection sqlConnection = new SqlConnection(ConnectionString))
+            using (SqlCommand sqlCommand = new SqlCommand())
+            {
+                sqlCommand.Connection = sqlConnection;
+                sqlCommand.CommandText = "select IdEnrollment from Enrollment e join Studies s on e.IdStudy = s.IdStudy where s.Name = @Studies and e.Semester = @Semester";
+                sqlCommand.Parameters.AddWithValue("Semester", semester);
+                sqlCommand.Parameters.AddWithValue("Studies", studies);
+
+                sqlConnection.Open();
+                SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
+                return sqlDataReader.Read();
+            }
         }
 
         public Enrollment EnrollStudent(EnrollStudentRequest enrollStudentRequest)
@@ -170,5 +187,32 @@ namespace s17738_cw3.DAL
             }
             return enrollment;
         }
+
+        public Enrollment PromoteStudents(int semester, string studies)
+        {
+            using (SqlConnection sqlConnection = new SqlConnection(ConnectionString))
+            using (SqlCommand sqlCommand = new SqlCommand())
+            {
+                sqlCommand.Connection = sqlConnection;
+                sqlCommand.CommandType = CommandType.StoredProcedure;
+                sqlCommand.CommandText = "PromoteStudents";
+                sqlCommand.Parameters.AddWithValue("Semester", semester);
+                sqlCommand.Parameters.AddWithValue("Studies", studies);
+
+                sqlConnection.Open();
+                SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
+                if (sqlDataReader.Read())
+                {
+                    return new Enrollment()
+                    {
+                        IdEnrollment = (int)sqlDataReader["IdEnrollment"],
+                        Semester = (int)sqlDataReader["Semester"],
+                        StartDate = DateTime.Parse(sqlDataReader["StartDate"].ToString())
+                    };
+                }
+                return null;
+            }
+        }
+
     }
 }

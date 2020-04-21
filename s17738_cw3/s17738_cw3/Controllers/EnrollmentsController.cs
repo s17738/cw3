@@ -39,5 +39,24 @@ namespace s17738_cw3.Controllers
 
             return Created("", enrollStudentResponse);
         }
+
+        [HttpPost("promotions")]
+        public IActionResult PromoteStudents(PromoteStudentsRequest promoteStudentsRequest)
+        {
+
+            if (!_dbService.EnrollmentExist(promoteStudentsRequest.Semester, promoteStudentsRequest.Studies))
+            {
+                return NotFound();
+            }
+
+            Enrollment enrollment = _dbService.PromoteStudents(promoteStudentsRequest.Semester, promoteStudentsRequest.Studies);
+
+            if (enrollment == null)
+            {
+                throw new System.Exception("Unknown Error");
+            }
+
+            return Created("", enrollment);
+        }
     }
 }
