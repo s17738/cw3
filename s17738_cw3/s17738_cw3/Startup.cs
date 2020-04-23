@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using s17738_cw3.DAL;
+using s17738_cw3.Middlewares;
 
 namespace s17738_cw3
 {
@@ -36,6 +37,8 @@ namespace s17738_cw3
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseMiddleware<LoggingMiddleware>();
 
             app.Use(async (context, next) =>
             {
