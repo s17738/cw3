@@ -1,3 +1,5 @@
+using System;
+using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -24,18 +26,28 @@ namespace s17738_cw3
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IDbService dbService)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
-
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.Use(async (context, next) =>
+            {
+                context.Request.Headers.TryGetValue("Index", out var index);
+                if (String.IsNullOrEmpty(index.ToString()) || dbService.GetStudent(index) == null)
+                {
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    return;
+                }
+
+                await next();
+            });
 
             app.UseEndpoints(endpoints =>
             {
