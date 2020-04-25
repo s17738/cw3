@@ -36,9 +36,9 @@ namespace s17738_cw3
 
             app.UseRouting();
 
-            app.UseAuthorization();
-
             app.UseMiddleware<LoggingMiddleware>();
+
+            app.UseAuthorization();
 
             app.Use(async (context, next) =>
             {
