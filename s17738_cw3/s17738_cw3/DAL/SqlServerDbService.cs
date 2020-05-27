@@ -28,7 +28,10 @@ namespace s17738_cw3.DAL
                     {
                         FirstName = sqlDataReader["FirstName"].ToString(),
                         LastName = sqlDataReader["LastName"].ToString(),
-                        IndexNumber = sqlDataReader["IndexNumber"].ToString()
+                        IndexNumber = sqlDataReader["IndexNumber"].ToString(),
+                        Password = sqlDataReader["Password"].ToString(),
+                        PasswordSalt = sqlDataReader["PasswordSalt"].ToString(),
+                        Role = sqlDataReader["Role"].ToString()
                     });
                 }
             }
@@ -52,7 +55,10 @@ namespace s17738_cw3.DAL
                     {
                         FirstName = sqlDataReader["FirstName"].ToString(),
                         LastName = sqlDataReader["LastName"].ToString(),
-                        IndexNumber = sqlDataReader["IndexNumber"].ToString()
+                        IndexNumber = sqlDataReader["IndexNumber"].ToString(),
+                        Password = sqlDataReader["Password"].ToString(),
+                        PasswordSalt = sqlDataReader["PasswordSalt"].ToString(),
+                        Role = sqlDataReader["Role"].ToString()
                     };
                 }
             }
@@ -214,5 +220,55 @@ namespace s17738_cw3.DAL
             }
         }
 
+        public UserAuthToken getToken(string token)
+        {
+            using (SqlConnection sqlConnection = new SqlConnection(ConnectionString))
+            using (SqlCommand sqlCommand = new SqlCommand())
+            {
+                sqlCommand.Connection = sqlConnection;
+                sqlCommand.CommandText = "select * from Token where Id = @Id";
+                sqlCommand.Parameters.AddWithValue("Id", token);
+
+                sqlConnection.Open();
+                SqlDataReader sqlDataReader = sqlCommand.ExecuteReader();
+                if (sqlDataReader.Read())
+                {
+                    return new UserAuthToken
+                    {
+                        Id = sqlDataReader["Id"].ToString(),
+                        UserId = sqlDataReader["userId"].ToString()
+                    };
+                }
+            }
+            return null;
+        }
+
+        public void saveToken(UserAuthToken authToken)
+        {
+            using (var connection = new SqlConnection(ConnectionString))
+            using (var command = new SqlCommand())
+            {
+                command.Connection = connection;
+                connection.Open();
+                SqlTransaction transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                try
+                {
+                    command.CommandText = "insert into Token (Id, UserId) values (@Id, @UserId)";
+                    command.Parameters.AddWithValue("Id", authToken.Id);
+                    command.Parameters.AddWithValue("UserId", authToken.UserId);
+                    command.ExecuteNonQuery();
+                    command.Parameters.Clear();
+
+                    transaction.Commit();
+                }
+                catch (SqlException exc)
+                {
+                    transaction.Rollback();
+                    throw exc;
+                }
+            }
+        }
     }
 }

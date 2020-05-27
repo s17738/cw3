@@ -17,5 +17,9 @@ namespace s17738_cw3.DAL
         Enrollment EnrollStudent(EnrollStudentRequest enrollStudentRequest);
 
         Enrollment PromoteStudents(int semester, string studies);
+
+        UserAuthToken getToken(string token);
+
+        void saveToken(UserAuthToken authToken);
     }
 }

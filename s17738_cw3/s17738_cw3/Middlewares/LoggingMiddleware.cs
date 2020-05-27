@@ -31,7 +31,6 @@ namespace s17738_cw3.Middlewares
                     string body = await reader.ReadToEndAsync();
                     await outputFile.WriteLineAsync($"{method} {path} {queryString} {body}");
                 }
-                return;
             }
 
             await _next(httpContext);

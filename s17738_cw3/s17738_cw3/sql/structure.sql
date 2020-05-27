@@ -1,45 +1,54 @@
-﻿-- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2020-03-22 07:12:20.376
+﻿
+create table Enrollment
+(
+	IdEnrollment int not null
+		constraint Enrollment_pk
+			primary key,
+	Semester int not null,
+	IdStudy int not null
+		constraint Enrollment_Studies
+			references Studies,
+	StartDate date not null
+)
+go
 
--- tables
--- Table: Enrollment
-CREATE TABLE Enrollment (
-    IdEnrollment int  NOT NULL,
-    Semester int  NOT NULL,
-    IdStudy int  NOT NULL,
-    StartDate date  NOT NULL,
-    CONSTRAINT Enrollment_pk PRIMARY KEY  (IdEnrollment)
-);
+create table Student
+(
+	IndexNumber nvarchar(100) not null
+		constraint Student_pk
+			primary key,
+	FirstName nvarchar(100) not null,
+	LastName nvarchar(100) not null,
+	BirthDate date not null,
+	IdEnrollment int not null
+		constraint Student_Enrollment
+			references Enrollment,
+	Password nvarchar(200),
+	Role nvarchar(100),
+	PasswordSalt nvarchar(200)
+)
+go
 
--- Table: Student
-CREATE TABLE Student (
-    IndexNumber nvarchar(100)  NOT NULL,
-    FirstName nvarchar(100)  NOT NULL,
-    LastName nvarchar(100)  NOT NULL,
-    BirthDate date  NOT NULL,
-    IdEnrollment int  NOT NULL,
-    CONSTRAINT Student_pk PRIMARY KEY  (IndexNumber)
-);
+create table Studies
+(
+	IdStudy int not null
+		constraint Studies_pk
+			primary key,
+	Name nvarchar(100) not null
+)
+go
 
--- Table: Studies
-CREATE TABLE Studies (
-    IdStudy int  NOT NULL,
-    Name nvarchar(100)  NOT NULL,
-    CONSTRAINT Studies_pk PRIMARY KEY  (IdStudy)
-);
+create table Token
+(
+	Id nvarchar(100) not null
+		constraint Token_pk
+			primary key nonclustered,
+	UserId nvarchar(100) not null
+		constraint UserId_Student_IndexNumber_fk
+			references Student
+)
+go
 
--- foreign keys
--- Reference: Enrollment_Studies (table: Enrollment)
-ALTER TABLE Enrollment ADD CONSTRAINT Enrollment_Studies
-    FOREIGN KEY (IdStudy)
-    REFERENCES Studies (IdStudy);
-
--- Reference: Student_Enrollment (table: Student)
-ALTER TABLE Student ADD CONSTRAINT Student_Enrollment
-    FOREIGN KEY (IdEnrollment)
-    REFERENCES Enrollment (IdEnrollment);
-
--- End of file.
 
 
 CREATE PROCEDURE PromoteStudents @Studies NVARCHAR(100), @Semester INT OUTPUT
@@ -71,3 +80,4 @@ BEGIN
 
     SELECT IdEnrollment, Semester, IdStudy, StartDate FROM Enrollment WHERE IdEnrollment = @NewSemesterId;
 END
+

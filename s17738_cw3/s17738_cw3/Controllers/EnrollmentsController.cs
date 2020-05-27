@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using s17738_cw3.DAL;
 using s17738_cw3.DTO;
 using s17738_cw3.Models;
@@ -7,6 +8,7 @@ namespace s17738_cw3.Controllers
 {
     [ApiController]
     [Route("api/enrollments")]
+    [Authorize(Roles = "employee")]
     public class EnrollmentsController : ControllerBase
     {
         private readonly IDbService _dbService;

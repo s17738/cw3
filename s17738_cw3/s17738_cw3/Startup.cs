@@ -7,6 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using s17738_cw3.DAL;
 using s17738_cw3.Middlewares;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace s17738_cw3
 {
@@ -23,7 +26,23 @@ namespace s17738_cw3
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<IDbService, SqlServerDbService>();
-            services.AddControllers();
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer(options =>
+                    {
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
+                            ValidateLifetime = true,
+                            ValidIssuer = "Gakko",
+                            ValidAudience = "Students",
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["SecretKey"]))
+                        };
+                    });
+
+            services.AddControllers()
+                    .AddXmlSerializerFormatters();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -36,21 +55,23 @@ namespace s17738_cw3
 
             app.UseRouting();
 
-            app.UseMiddleware<LoggingMiddleware>();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
-            app.Use(async (context, next) =>
-            {
-                context.Request.Headers.TryGetValue("Index", out var index);
-                if (String.IsNullOrEmpty(index.ToString()) || dbService.GetStudent(index) == null)
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    return;
-                }
+            //app.UseMiddleware<LoggingMiddleware>();
 
-                await next();
-            });
+            // disabled because of JWT auth
+            //app.Use(async (context, next) =>
+            //{
+            //    context.Request.Headers.TryGetValue("Index", out var index);
+            //    if (String.IsNullOrEmpty(index.ToString()) || dbService.GetStudent(index) == null)
+            //    {
+            //        context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            //        return;
+            //    }
+
+            //    await next();
+            //});
 
             app.UseEndpoints(endpoints =>
             {
