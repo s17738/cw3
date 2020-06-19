@@ -1,4 +1,13 @@
 ﻿
+create table Studies
+(
+	IdStudy int not null
+		constraint Studies_pk
+			primary key,
+	Name nvarchar(100) not null
+)
+go
+
 create table Enrollment
 (
 	IdEnrollment int not null
@@ -29,15 +38,6 @@ create table Student
 )
 go
 
-create table Studies
-(
-	IdStudy int not null
-		constraint Studies_pk
-			primary key,
-	Name nvarchar(100) not null
-)
-go
-
 create table Token
 (
 	Id nvarchar(100) not null
@@ -48,7 +48,6 @@ create table Token
 			references Student
 )
 go
-
 
 
 CREATE PROCEDURE PromoteStudents @Studies NVARCHAR(100), @Semester INT OUTPUT

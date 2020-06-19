@@ -10,6 +10,7 @@ using s17738_cw3.Middlewares;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using s17738_cw3.OrmModels;
 
 namespace s17738_cw3
 {
@@ -25,6 +26,7 @@ namespace s17738_cw3
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<S17738Context>();
             services.AddScoped<IDbService, SqlServerDbService>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

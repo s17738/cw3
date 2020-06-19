@@ -6,4 +6,5 @@ services:
       - "1433:1433"
     environment:
       ACCEPT_EULA: 'Y'
-      SA_PASSWORD: 'my_secret_password'
+      SA_PASSWORD: "z276DtAfs5d!sfn459ndej"
+# dotnet-ef dbcontext Scaffold 'Data Source=localhost,1433; Initial Catalog=s17738; User ID=sa;Password=z276DtAfs5d!sfn459ndej' Microsoft.EntityFrameworkCore.SqlServer -o OrmModels

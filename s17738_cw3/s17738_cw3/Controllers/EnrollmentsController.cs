@@ -1,14 +1,15 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using s17738_cw3.DAL;
 using s17738_cw3.DTO;
-using s17738_cw3.Models;
+using s17738_cw3.OrmModels;
 
 namespace s17738_cw3.Controllers
 {
     [ApiController]
     [Route("api/enrollments")]
-    [Authorize(Roles = "employee")]
+    //[Authorize(Roles = "employee")]
     public class EnrollmentsController : ControllerBase
     {
         private readonly IDbService _dbService;
@@ -19,9 +20,9 @@ namespace s17738_cw3.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] EnrollStudentRequest enrollStudentRequest)
+        public async Task<IActionResult> Post([FromBody] EnrollStudentRequest enrollStudentRequest)
         {
-            if (_dbService.GetStudent(enrollStudentRequest.IndexNumber) != null)
+            if (await _dbService.GetStudent(enrollStudentRequest.IndexNumber) != null)
             {
                 return BadRequest("Student already exist");
             }

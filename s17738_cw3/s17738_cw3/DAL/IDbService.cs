@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using s17738_cw3.DTO;
-using s17738_cw3.Models;
+using s17738_cw3.OrmModels;
 
 namespace s17738_cw3.DAL
 {
@@ -8,9 +9,15 @@ namespace s17738_cw3.DAL
     {
         IEnumerable<Student> GetStudents();
 
-        Student GetStudent(string indexNumber);
+        Task<Student> GetStudent(string indexNumber);
 
-        IEnumerable<Enrollment> GetStudentEnrollments(string indexNumber);
+        Task<Student> CreateStudent(Student student);
+
+        Task<bool> UpdateStudent(string indexNumber, Student student);
+
+        Task<bool> DeleteStudent(string indexNumber);
+
+        Task<Enrollment> GetStudentEnrollments(string indexNumber);
 
         bool EnrollmentExist(int semester, string studies);
 
@@ -18,8 +25,8 @@ namespace s17738_cw3.DAL
 
         Enrollment PromoteStudents(int semester, string studies);
 
-        UserAuthToken getToken(string token);
+        Token GetToken(string token);
 
-        void saveToken(UserAuthToken authToken);
+        void SaveToken(Token authToken);
     }
 }

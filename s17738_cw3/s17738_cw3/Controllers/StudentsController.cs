@@ -6,16 +6,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Configuration;
 using s17738_cw3.DAL;
-using s17738_cw3.Models;
+using s17738_cw3.OrmModels;
 using System.Text;
 using s17738_cw3.DTO;
 using s17738_cw3.Util;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace s17738_cw3.Controllers
 {
     [ApiController]
-    [Authorize]
+    //[Authorize]
     [Route("api/students")]
     public class StudentsController : ControllerBase
     {
@@ -28,80 +29,105 @@ namespace s17738_cw3.Controllers
             Configuration = configuration;
         }
 
+        private StudentResponse MapStudent(Student student)
+        {
+            return new StudentResponse
+            {
+                IndexNumber = student.IndexNumber,
+                FirstName = student.FirstName,
+                LastName = student.LastName,
+                BirthDate = student.BirthDate,
+                Role = student.Role
+            };
+        }
+
         [HttpGet]
         public IActionResult GetStudents()
         {
             var response = new List<StudentResponse>();
             foreach (Student s in _dbService.GetStudents())
             {
-                response.Add(new StudentResponse
-                {
-                    IndexNumber = s.IndexNumber,
-                    FirstName = s.FirstName,
-                    LastName = s.LastName,
-                    Role = s.Role
-                });
+                response.Add(MapStudent(s));
             }
 
             return Ok(response);
         }
 
         [HttpGet("{indexNumber}")]
-        public IActionResult Get([FromRoute] string indexNumber)
+        public async Task<IActionResult> Get([FromRoute] string indexNumber)
         {
-            Student student = _dbService.GetStudent(indexNumber);
-            if (student != null)
+            Student s = await _dbService.GetStudent(indexNumber);
+            if (s != null)
             {
-                return Ok(student);
+                return Ok(MapStudent(s));
             }
             return NotFound();
         }
 
         [HttpGet("{indexNumber}/enrollments")]
-        public IActionResult GetEnrollments([FromRoute] string indexNumber)
+        public async Task<IActionResult> GetEnrollmentsAsync([FromRoute] string indexNumber)
         {
-            return Ok(_dbService.GetStudentEnrollments(indexNumber));
+            var e = await _dbService.GetStudentEnrollments(indexNumber);
+            if (e == null)
+            {
+                return NotFound();
+            }
+            return Ok(new StudentEnrollmentDto
+            {
+                IdEnrollment = e.IdEnrollment,
+                Semester = e.Semester,
+                IdStudy = e.IdStudy,
+                StartDate = e.StartDate
+            });
         }
 
         [HttpPost]
-        public IActionResult CreateStudent([FromBody] Student student)
+        public async Task<IActionResult> CreateStudent([FromBody] Student student)
         {
-            string plainPass = student.Password;
-            student.IndexNumber = $"s{ new Random().Next(1, 30000)}";
-            student.PasswordSalt = PassUtil.GenerateSalt();
-            student.Password = PassUtil.GeneratePasswordHash(plainPass, student.PasswordSalt);
-            return Ok(student);
+            var s = await _dbService.CreateStudent(student);
+            var newStudent = MapStudent(s);
+            return Created("/api/students/" + newStudent.IndexNumber, newStudent);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult UpdateStudent([FromRoute] int id, [FromBody] Student student)
+        [HttpPut("{indexNumber}")]
+        public async Task<IActionResult> UpdateStudent([FromRoute] string indexNumber, [FromBody][Bind("FirstName,LastName")] Student student)
         {
-            return Ok($"Student {id} has been updated to {student.FirstName} {student.LastName}");
+            if (indexNumber == null)
+            {
+                return NotFound();
+            }
+            await _dbService.UpdateStudent(indexNumber, student);
+            return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public IActionResult DeleteStudent([FromRoute] int id)
+        [HttpDelete("{indexNumber}")]
+        public async Task<IActionResult> DeleteStudent([FromRoute] string indexNumber)
         {
-            return Ok($"Student {id} has been deleted");
+            if (indexNumber == null)
+            {
+                return NotFound();
+            }
+            await _dbService.DeleteStudent(indexNumber);
+            return NoContent();
         }
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public IActionResult Login([FromBody] LoginRequestDto loginRequestDto)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
         {
-            Student student = _dbService.GetStudent(loginRequestDto.Login);
+            Student student = await _dbService.GetStudent(loginRequestDto.Login);
             if (student == null || !PassUtil.ValidatePassword(loginRequestDto.Password, student.PasswordSalt, student.Password))
             {
                 return BadRequest("Invalid login or password");
             }
 
-            UserAuthToken authToken = new UserAuthToken
+            Token authToken = new Token
             {
                 Id = Guid.NewGuid().ToString(),
                 UserId = student.IndexNumber
             };
 
-            _dbService.saveToken(authToken);
+            _dbService.SaveToken(authToken);
 
             return Ok(new
             {
@@ -135,28 +161,28 @@ namespace s17738_cw3.Controllers
         }
 
         [HttpPost("refresh-token/{token}")]
-        public IActionResult RefreshToken([FromRoute] string token)
+        public async Task<IActionResult> RefreshToken([FromRoute] string token)
         {
 
-            UserAuthToken authToken = _dbService.getToken(token);
+            Token authToken = _dbService.GetToken(token);
             if (authToken == null)
             {
                 return BadRequest("Invalid or expired token");
             }
 
-            Student student = _dbService.GetStudent(authToken.UserId);
+            Student student = await _dbService.GetStudent(authToken.UserId);
             if (student == null)
             {
                 return BadRequest("Invalid user");
             }
 
-            UserAuthToken newAuthToken = new UserAuthToken
+            Token newAuthToken = new Token
             {
                 Id = Guid.NewGuid().ToString(),
                 UserId = student.IndexNumber
             };
 
-            _dbService.saveToken(newAuthToken);
+            _dbService.SaveToken(newAuthToken);
 
             return Ok(new
             {
